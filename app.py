@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_from_directory
 import json
 import os
 import asyncio
@@ -176,7 +176,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 # ===== МАРШРУТЫ =====
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return send_from_directory('templates', 'index.html')
 
 @app.route('/api/collect', methods=['POST'])
 def collect():
