@@ -1,4 +1,4 @@
-юfrom flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 import json
 import os
 import asyncio
